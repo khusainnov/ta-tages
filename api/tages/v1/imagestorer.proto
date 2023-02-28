@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option go_package = "github.com/khusainnov/tag/api/tages/v1;tapi";
+
+import "google/protobuf/timestamp.proto";
+
+service ImageService {
+  rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse) {};
+  rpc ListImages(stream ListImagesRequest) returns (ListImagesResponse) {};
+}
+
+message UploadImageRequest {
+  bytes image = 1;
+}
+
+message ListImagesRequest {}
+
+message Image {
+  string name = 1;
+  google.protobuf.Timestamp created_date = 2;
+  google.protobuf.Timestamp modified_date = 3;
+}
+
+message UploadImageResponse {
+  Image image = 1;
+}
+
+message ListImagesResponse {
+  repeated Image images = 1;
+}
