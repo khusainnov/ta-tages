@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"os"
 
 	"github.com/khusainnov/tag/internal/app/imagestorer/endpoint"
 	"github.com/khusainnov/tag/internal/app/imagestorer/repository"
@@ -36,6 +37,10 @@ func Run(ctx context.Context, cfg *config.Config) error {
 
 	httpServer := http.New(cfg)
 	httpServer.Start()
+
+	if err = checkStoreFolder(cfg.Path); err != nil {
+		cfg.L.Fatal("check err", zap.Error(err))
+	}
 
 	repo := repository.NewRepository(cfg.Path)
 	srv := service.NewService(repo)
@@ -75,4 +80,13 @@ func logStreamInterceptor(log *zap.Logger) grpc.StreamServerInterceptor {
 
 		return handler(srv, ss)
 	}
+}
+
+func checkStoreFolder(path string) error {
+	_, err := os.Stat(path)
+	if err != nil {
+		return os.Mkdir(path, os.ModeDir)
+	}
+
+	return nil
 }
