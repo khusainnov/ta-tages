@@ -16,13 +16,15 @@ import (
 
 // limits for client connections
 const (
-	maxUpload = 10
-	maxList   = 100
+	maxUpload   = 10
+	maxList     = 100
+	maxDownload = 10
 )
 
 var (
-	uploadCounter uint32 = 0
-	listCounter   uint32 = 0
+	uploadCounter   uint32 = 0
+	listCounter     uint32 = 0
+	downloadCounter uint32 = 0
 )
 
 type Endpoint struct {
@@ -38,11 +40,11 @@ func NewEndpoint(client tapi.ImageServiceClient, log *zap.Logger) *Endpoint {
 }
 
 func (e *Endpoint) Upload(ctx context.Context, image []byte) error {
-	atomic.AddUint32(&uploadCounter, 1)
-
 	if uploadCounter > maxUpload {
-		return status.Error(codes.Aborted, "limit reached")
+		return status.Error(codes.Aborted, "limit exceeded")
 	}
+
+	atomic.AddUint32(&uploadCounter, 1)
 
 	req := &tapi.UploadImageRequest{
 		Image: image,
@@ -59,6 +61,10 @@ func (e *Endpoint) Upload(ctx context.Context, image []byte) error {
 }
 
 func (e *Endpoint) List(ctx context.Context) error {
+	if listCounter > maxList {
+		return status.Error(codes.Aborted, "limit exceeded")
+	}
+
 	atomic.AddUint32(&listCounter, 1)
 
 	req := &emptypb.Empty{}
@@ -78,7 +84,10 @@ func (e *Endpoint) List(ctx context.Context) error {
 }
 
 func (e *Endpoint) Download(ctx context.Context, id string) error {
-	atomic.AddUint32(&uploadCounter, 1)
+	if downloadCounter > maxDownload {
+		return status.Error(codes.Aborted, "limit exceeded")
+	}
+	atomic.AddUint32(&downloadCounter, 1)
 
 	req := &tapi.DownloadImageRequest{
 		Id: id,
@@ -91,6 +100,8 @@ func (e *Endpoint) Download(ctx context.Context, id string) error {
 
 	image := base64.StdEncoding.EncodeToString(resp.Image)
 	fmt.Fprintf(os.Stdout, "%s\n", image)
+
+	downloadCounter--
 
 	return nil
 }
