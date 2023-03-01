@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -45,7 +46,7 @@ func (c *imageServiceClient) UploadImage(ctx context.Context, opts ...grpc.CallO
 
 type ImageService_UploadImageClient interface {
 	Send(*UploadImageRequest) error
-	CloseAndRecv() (*UploadImageResponse, error)
+	CloseAndRecv() (*emptypb.Empty, error)
 	grpc.ClientStream
 }
 
@@ -57,11 +58,11 @@ func (x *imageServiceUploadImageClient) Send(m *UploadImageRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *imageServiceUploadImageClient) CloseAndRecv() (*UploadImageResponse, error) {
+func (x *imageServiceUploadImageClient) CloseAndRecv() (*emptypb.Empty, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
-	m := new(UploadImageResponse)
+	m := new(emptypb.Empty)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (c *imageServiceClient) ListImages(ctx context.Context, opts ...grpc.CallOp
 }
 
 type ImageService_ListImagesClient interface {
-	Send(*ListImagesRequest) error
+	Send(*emptypb.Empty) error
 	CloseAndRecv() (*ListImagesResponse, error)
 	grpc.ClientStream
 }
@@ -87,7 +88,7 @@ type imageServiceListImagesClient struct {
 	grpc.ClientStream
 }
 
-func (x *imageServiceListImagesClient) Send(m *ListImagesRequest) error {
+func (x *imageServiceListImagesClient) Send(m *emptypb.Empty) error {
 	return x.ClientStream.SendMsg(m)
 }
 
@@ -139,7 +140,7 @@ func _ImageService_UploadImage_Handler(srv interface{}, stream grpc.ServerStream
 }
 
 type ImageService_UploadImageServer interface {
-	SendAndClose(*UploadImageResponse) error
+	SendAndClose(*emptypb.Empty) error
 	Recv() (*UploadImageRequest, error)
 	grpc.ServerStream
 }
@@ -148,7 +149,7 @@ type imageServiceUploadImageServer struct {
 	grpc.ServerStream
 }
 
-func (x *imageServiceUploadImageServer) SendAndClose(m *UploadImageResponse) error {
+func (x *imageServiceUploadImageServer) SendAndClose(m *emptypb.Empty) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -166,7 +167,7 @@ func _ImageService_ListImages_Handler(srv interface{}, stream grpc.ServerStream)
 
 type ImageService_ListImagesServer interface {
 	SendAndClose(*ListImagesResponse) error
-	Recv() (*ListImagesRequest, error)
+	Recv() (*emptypb.Empty, error)
 	grpc.ServerStream
 }
 
@@ -178,8 +179,8 @@ func (x *imageServiceListImagesServer) SendAndClose(m *ListImagesResponse) error
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *imageServiceListImagesServer) Recv() (*ListImagesRequest, error) {
-	m := new(ListImagesRequest)
+func (x *imageServiceListImagesServer) Recv() (*emptypb.Empty, error) {
+	m := new(emptypb.Empty)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

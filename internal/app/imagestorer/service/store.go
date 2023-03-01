@@ -1,9 +1,15 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/khusainnov/tag/internal/app/imagestorer/repository"
 	"github.com/khusainnov/tag/internal/app/imagestorer/service/adapters"
 	tapi "github.com/khusainnov/tag/pkg/tages-api"
+)
+
+var (
+	errEmptyData = errors.New("empty request body")
 )
 
 type StoreService struct {
@@ -15,6 +21,10 @@ func NewStoreService(repo repository.Store) *StoreService {
 }
 
 func (s *StoreService) UploadImage(image []byte) (*tapi.UploadImageResponse, error) {
+	if len(image) == 0 {
+		return &tapi.UploadImageResponse{}, errEmptyData
+	}
+
 	resp, err := s.repo.SaveImage(image)
 	if err != nil {
 		return &tapi.UploadImageResponse{}, err

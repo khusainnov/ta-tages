@@ -3,10 +3,11 @@ syntax = "proto3";
 option go_package = "github.com/khusainnov/tag/api/tages/v1;tapi";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 service ImageService {
-  rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse) {};
-  rpc ListImages(stream ListImagesRequest) returns (ListImagesResponse) {};
+  rpc UploadImage(stream UploadImageRequest) returns (google.protobuf.Empty) {};
+  rpc ListImages(stream google.protobuf.Empty) returns (ListImagesResponse) {};
 }
 
 message UploadImageRequest {

@@ -44,7 +44,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 	tapi.RegisterImageServiceServer(s, e)
 
 	cfg.L.Info("starting listening grpc server", zap.Any("PORT", cfg.GRPCAddr))
-	if err := s.Serve(l); err != nil {
+	if err = s.Serve(l); err != nil {
 		cfg.L.Fatal("error service grpc server", zap.Error(err))
 	}
 
@@ -65,9 +65,14 @@ func logUnaryInterceptor(log *zap.Logger) grpc.UnaryServerInterceptor {
 }
 
 func logStreamInterceptor(log *zap.Logger) grpc.StreamServerInterceptor {
-	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	return func(
+		srv interface{},
+		ss grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler,
+	) error {
 		log.Info("stream interceptor", zap.Any("method", info.FullMethod))
 
-		return nil
+		return handler(srv, ss)
 	}
 }
