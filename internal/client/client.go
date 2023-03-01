@@ -34,7 +34,6 @@ func main() {
 		if err != nil {
 			log.Error("cannot read input", zap.Error(err))
 		}
-		cmd = strings.TrimSuffix(cmd, "\n")
 
 		switch cmd {
 		case "1":
@@ -48,10 +47,14 @@ func main() {
 				log.Error("cannot get list of images", zap.Error(err))
 			}
 		case "3":
-			for _, id := range internal.ImageIds {
-				if err = e.Download(context.Background(), id); err != nil {
-					log.Error("cannot download the image", zap.Error(err))
-				}
+			fmt.Fprintf(os.Stdout, "Enter image id\n> ")
+			id, err := readInput()
+			if err != nil {
+				log.Error("error due input", zap.Error(err))
+			}
+
+			if err = e.Download(context.Background(), id); err != nil {
+				log.Error("cannot download the image", zap.Error(err))
 			}
 		default:
 			log.Error("command doesn't exists")
@@ -61,5 +64,6 @@ func main() {
 
 func readInput() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	return reader.ReadString('\n')
+	msg, err := reader.ReadString('\n')
+	return strings.TrimSuffix(msg, "\n"), err
 }

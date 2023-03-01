@@ -15,10 +15,10 @@ func (e *Endpoint) UploadImage(ctx context.Context, req *tapi.UploadImageRequest
 		return nil, status.Error(codes.InvalidArgument, "request don't provide any data")
 	}
 
-	_, err := e.srv.UploadImage(req.GetImage())
+	_, err := e.srv.UploadImage(req.Image)
 	if err != nil {
 		return nil, status.Error(codes.Internal, fmt.Errorf("cannot upload the image, %w", err).Error())
 	}
 
-	return nil, ctx.Err()
+	return new(emptypb.Empty), ctx.Err()
 }
