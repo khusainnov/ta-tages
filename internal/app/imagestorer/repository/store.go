@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -57,6 +58,20 @@ func (s *StoreRepository) ListImage() ([]*model.Image, error) {
 	}
 
 	return resp, nil
+}
+
+func (s *StoreRepository) DownloadImage(id string) ([]byte, error) {
+	file, err := os.Open(filepath.Join(s.Path, fmt.Sprintf("%s.pdf", id)))
+	if err != nil {
+		return nil, fmt.Errorf("cannot get image, %w", err)
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read image data, %w", err)
+	}
+
+	return data, nil
 }
 
 func getImageData(info os.FileInfo) (*model.Image, error) {

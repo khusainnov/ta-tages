@@ -2,10 +2,9 @@ package endpoint
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
-	"io"
 	"os"
-	"sync"
 	"sync/atomic"
 
 	tapi "github.com/khusainnov/tag/pkg/tages-api"
@@ -28,8 +27,6 @@ var (
 
 type Endpoint struct {
 	L      *zap.Logger
-	mu     *sync.Mutex
-	wg     sync.WaitGroup
 	client tapi.ImageServiceClient
 }
 
@@ -47,18 +44,13 @@ func (e *Endpoint) Upload(ctx context.Context, image []byte) error {
 		return status.Error(codes.Aborted, "limit reached")
 	}
 
-	cc, err := e.client.UploadImage(ctx)
-	if err != nil {
-		return fmt.Errorf("cannot upload the image, %w", err)
-	}
-
 	req := &tapi.UploadImageRequest{
 		Image: image,
 	}
 
-	if err = cc.Send(req); err != nil {
-		e.L.Error("cannot send upload request", zap.Error(err))
-		return fmt.Errorf("cannot send upload request, %w", err)
+	_, err := e.client.UploadImage(ctx, req)
+	if err != nil {
+		return fmt.Errorf("cannot upload the image, %w", err)
 	}
 
 	uploadCounter--
@@ -69,33 +61,36 @@ func (e *Endpoint) Upload(ctx context.Context, image []byte) error {
 func (e *Endpoint) List(ctx context.Context) error {
 	atomic.AddUint32(&listCounter, 1)
 
-	cc, err := e.client.ListImages(ctx)
+	req := &emptypb.Empty{}
+
+	resp, err := e.client.ListImages(ctx, req)
 	if err != nil {
 		return fmt.Errorf("cannot get list of images, %w", err)
 	}
 
-	rsp := &tapi.ListImagesResponse{}
-
-	req := &emptypb.Empty{}
-	if err = cc.Send(req); err != nil {
-		e.L.Error("cannot send list request", zap.Error(err))
-		return err
-	}
-
-	err = cc.RecvMsg(rsp)
-	if err == io.EOF {
-		return err
-	}
-	if err != nil {
-		e.L.Error("cannot receive response list", zap.Error(err))
-		return err
-	}
-
-	for _, v := range rsp.Images {
+	for _, v := range resp.Images {
 		fmt.Fprintf(os.Stdout, "%v\n", v)
 	}
 
 	listCounter--
+
+	return nil
+}
+
+func (e *Endpoint) Download(ctx context.Context, id string) error {
+	atomic.AddUint32(&uploadCounter, 1)
+
+	req := &tapi.DownloadImageRequest{
+		Id: id,
+	}
+
+	resp, err := e.client.DownloadImage(ctx, req)
+	if err != nil {
+		return fmt.Errorf("cannot download image, %w", err)
+	}
+
+	image := base64.StdEncoding.EncodeToString(resp.Image)
+	fmt.Fprintf(os.Stdout, "%s\n", image)
 
 	return nil
 }

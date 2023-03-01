@@ -23,3 +23,9 @@ func ListImageToPb(list []*model.Image) *tapi.ListImagesResponse {
 
 	return &tapi.ListImagesResponse{Images: resp}
 }
+
+func DownloadImageToPb(image []byte) *tapi.DownloadImageResponse {
+	return &tapi.DownloadImageResponse{
+		Image: image,
+	}
+}

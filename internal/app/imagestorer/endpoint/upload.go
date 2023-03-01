@@ -1,29 +1,24 @@
 package endpoint
 
 import (
+	"context"
 	"fmt"
 
 	tapi "github.com/khusainnov/tag/pkg/tages-api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (e *Endpoint) UploadImage(stream tapi.ImageService_UploadImageServer) error {
-	for {
-		req, err := stream.Recv()
-		if err != nil {
-			return status.Error(codes.InvalidArgument, "cannot get request")
-		}
-
-		_, err = e.srv.UploadImage(req.GetImage())
-		if err != nil {
-			return status.Error(codes.Internal, fmt.Errorf("cannot upload the image, %w", err).Error())
-		}
-
-		if err = stream.SendAndClose(nil); err != nil {
-			return status.Error(codes.Internal, fmt.Errorf("cannot send response data, %w", err).Error())
-		}
-
-		return nil
+func (e *Endpoint) UploadImage(ctx context.Context, req *tapi.UploadImageRequest) (*emptypb.Empty, error) {
+	if len(req.Image) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "request don't provide any data")
 	}
+
+	_, err := e.srv.UploadImage(req.GetImage())
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Errorf("cannot upload the image, %w", err).Error())
+	}
+
+	return nil, ctx.Err()
 }

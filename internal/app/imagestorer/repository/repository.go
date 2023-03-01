@@ -7,6 +7,7 @@ import (
 type Store interface {
 	SaveImage(image []byte) (*model.Image, error)
 	ListImage() ([]*model.Image, error)
+	DownloadImage(id string) ([]byte, error)
 }
 
 type Repository struct {

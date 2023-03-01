@@ -43,3 +43,12 @@ func (s *StoreService) ListImage() (*tapi.ListImagesResponse, error) {
 
 	return adapters.ListImageToPb(list), nil
 }
+
+func (s *StoreService) DownloadImage(id string) (*tapi.DownloadImageResponse, error) {
+	image, err := s.repo.DownloadImage(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return adapters.DownloadImageToPb(image), nil
+}

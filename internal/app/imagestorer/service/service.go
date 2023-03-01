@@ -8,6 +8,7 @@ import (
 type Store interface {
 	UploadImage(image []byte) (*tapi.UploadImageResponse, error)
 	ListImage() (*tapi.ListImagesResponse, error)
+	DownloadImage(id string) (*tapi.DownloadImageResponse, error)
 }
 
 type Service struct {

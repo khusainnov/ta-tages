@@ -6,8 +6,9 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 service ImageService {
-  rpc UploadImage(stream UploadImageRequest) returns (google.protobuf.Empty) {};
-  rpc ListImages(stream google.protobuf.Empty) returns (ListImagesResponse) {};
+  rpc UploadImage(UploadImageRequest) returns (google.protobuf.Empty) {};
+  rpc ListImages(google.protobuf.Empty) returns (ListImagesResponse) {};
+  rpc DownloadImage(DownloadImageRequest) returns (DownloadImageResponse) {};
 }
 
 message UploadImageRequest {
@@ -15,6 +16,10 @@ message UploadImageRequest {
 }
 
 message ListImagesRequest {}
+
+message DownloadImageRequest {
+  string id = 1;
+}
 
 message Image {
   string name = 1;
@@ -28,4 +33,8 @@ message UploadImageResponse {
 
 message ListImagesResponse {
   repeated Image images = 1;
+}
+
+message DownloadImageResponse {
+  bytes image = 1;
 }
