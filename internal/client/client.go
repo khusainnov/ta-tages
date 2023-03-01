@@ -24,7 +24,7 @@ func main() {
 
 	client := tapi.NewImageServiceClient(conn)
 
-	e := endpoint.NewEndpoint(client)
+	e := endpoint.NewEndpoint(client, log)
 
 	fmt.Printf("Choice witch method to request:\n1 – UploadImages\n2 – ListImages\n> ")
 
@@ -38,12 +38,14 @@ func main() {
 
 		switch cmd {
 		case "1":
-			if err = e.Upload(context.Background(), log); err != nil {
-				log.Fatal("cannot upload images", zap.Error(err))
+			for _, v := range internal.Images {
+				if err = e.Upload(context.Background(), v); err != nil {
+					log.Error("cannot upload images", zap.Error(err))
+				}
 			}
 		case "2":
-			if err = e.List(context.Background(), log); err != nil {
-				log.Fatal("cannot get list of images", zap.Error(err))
+			if err = e.List(context.Background()); err != nil {
+				log.Error("cannot get list of images", zap.Error(err))
 			}
 		default:
 			log.Error("command doesn't exists")

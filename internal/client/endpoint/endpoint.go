@@ -6,11 +6,12 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 
-	"github.com/khusainnov/tag/internal/client/internal"
 	tapi "github.com/khusainnov/tag/pkg/tages-api"
 	"go.uber.org/zap"
-	"golang.org/x/sync/semaphore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -20,108 +21,81 @@ const (
 	maxList   = 100
 )
 
+var (
+	uploadCounter uint32 = 0
+	listCounter   uint32 = 0
+)
+
 type Endpoint struct {
-	sync.WaitGroup
+	L      *zap.Logger
+	mu     *sync.Mutex
+	wg     sync.WaitGroup
 	client tapi.ImageServiceClient
 }
 
-func NewEndpoint(client tapi.ImageServiceClient) *Endpoint {
-	return &Endpoint{client: client}
+func NewEndpoint(client tapi.ImageServiceClient, log *zap.Logger) *Endpoint {
+	return &Endpoint{
+		L:      log,
+		client: client,
+	}
 }
 
-func (e *Endpoint) Upload(ctx context.Context, log *zap.Logger) error {
-	var count int
+func (e *Endpoint) Upload(ctx context.Context, image []byte) error {
+	atomic.AddUint32(&uploadCounter, 1)
+
+	if uploadCounter > maxUpload {
+		return status.Error(codes.Aborted, "limit reached")
+	}
 
 	cc, err := e.client.UploadImage(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot upload the image, %w", err)
 	}
 
-	semaphor := semaphore.NewWeighted(int64(maxUpload))
-
-	images := internal.Images
-	for count < maxUpload {
-		for i := 0; i < len(images)-1; i++ {
-			if err = semaphor.Acquire(ctx, 1); err != nil {
-				log.Error("cannot acquire semaphore", zap.Error(err))
-				continue
-			}
-
-			e.Add(1)
-			go func(m int) {
-				// release the semaphore when goroutine exits
-				defer func() {
-					semaphor.Release(1)
-					e.Done()
-				}()
-
-				req := &tapi.UploadImageRequest{
-					Image: images[m],
-				}
-
-				if err = cc.Send(req); err != nil {
-					log.Error("cannot send upload request", zap.Error(err))
-					return
-				}
-
-				count++
-			}(i)
-
-		}
+	req := &tapi.UploadImageRequest{
+		Image: image,
 	}
-	e.Wait()
+
+	if err = cc.Send(req); err != nil {
+		e.L.Error("cannot send upload request", zap.Error(err))
+		return fmt.Errorf("cannot send upload request, %w", err)
+	}
+
+	uploadCounter--
 
 	return nil
 }
 
-func (e *Endpoint) List(ctx context.Context, log *zap.Logger) error {
-	var count int
+func (e *Endpoint) List(ctx context.Context) error {
+	atomic.AddUint32(&listCounter, 1)
 
 	cc, err := e.client.ListImages(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot get list of images, %w", err)
 	}
 
-	semaphor := semaphore.NewWeighted(int64(maxList))
+	rsp := &tapi.ListImagesResponse{}
 
-	for count < maxList {
-		if err = semaphor.Acquire(ctx, 1); err != nil {
-			log.Error("cannot acquire semaphore", zap.Error(err))
-			continue
-		}
-
-		e.Add(1)
-		go func() {
-			// release the semaphore when goroutine exits
-			defer func() {
-				semaphor.Release(1)
-				e.Done()
-			}()
-
-			req := &emptypb.Empty{}
-			if err = cc.Send(req); err != nil {
-				log.Error("cannot send list request", zap.Error(err))
-				return
-			}
-
-			count++
-		}()
-
+	req := &emptypb.Empty{}
+	if err = cc.Send(req); err != nil {
+		e.L.Error("cannot send list request", zap.Error(err))
+		return err
 	}
 
-	rsp := &tapi.ListImagesResponse{}
 	err = cc.RecvMsg(rsp)
 	if err == io.EOF {
 		return err
 	}
 	if err != nil {
-		log.Error("cannot receive response list", zap.Error(err))
+		e.L.Error("cannot receive response list", zap.Error(err))
 		return err
 	}
 
 	for _, v := range rsp.Images {
 		fmt.Fprintf(os.Stdout, "%v\n", v)
 	}
+
+	listCounter--
 
 	return nil
 }

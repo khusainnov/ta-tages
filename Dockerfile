@@ -1,4 +1,4 @@
-FROM golang:1.19 as builder
+FROM golang:1.20 as builder
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ COPY . .
 
 RUN go mod download
 
-RUN GOOS=linux GOARCH=amd64 go build -o tages cmd/tages/main.go
+RUN go build -o tages cmd/tages/main.go
 
 FROM gcr.io/distroless/base-debian11
 
