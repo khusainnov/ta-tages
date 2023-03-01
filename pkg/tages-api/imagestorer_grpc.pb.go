@@ -46,7 +46,7 @@ func (c *imageServiceClient) UploadImage(ctx context.Context, opts ...grpc.CallO
 
 type ImageService_UploadImageClient interface {
 	Send(*UploadImageRequest) error
-	CloseAndRecv() (*UploadImageResponse, error)
+	CloseAndRecv() (*emptypb.Empty, error)
 	grpc.ClientStream
 }
 
@@ -58,11 +58,11 @@ func (x *imageServiceUploadImageClient) Send(m *UploadImageRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *imageServiceUploadImageClient) CloseAndRecv() (*UploadImageResponse, error) {
+func (x *imageServiceUploadImageClient) CloseAndRecv() (*emptypb.Empty, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
-	m := new(UploadImageResponse)
+	m := new(emptypb.Empty)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func _ImageService_UploadImage_Handler(srv interface{}, stream grpc.ServerStream
 }
 
 type ImageService_UploadImageServer interface {
-	SendAndClose(*UploadImageResponse) error
+	SendAndClose(*emptypb.Empty) error
 	Recv() (*UploadImageRequest, error)
 	grpc.ServerStream
 }
@@ -149,7 +149,7 @@ type imageServiceUploadImageServer struct {
 	grpc.ServerStream
 }
 
-func (x *imageServiceUploadImageServer) SendAndClose(m *UploadImageResponse) error {
+func (x *imageServiceUploadImageServer) SendAndClose(m *emptypb.Empty) error {
 	return x.ServerStream.SendMsg(m)
 }
 

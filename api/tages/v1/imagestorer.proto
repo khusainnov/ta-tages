@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 service ImageService {
-  rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse) {};
+  rpc UploadImage(stream UploadImageRequest) returns (google.protobuf.Empty) {};
   rpc ListImages(stream google.protobuf.Empty) returns (ListImagesResponse) {};
 }
 
