@@ -15,8 +15,6 @@ func (e *Endpoint) UploadImage(stream tapi.ImageService_UploadImageServer) error
 			return status.Error(codes.InvalidArgument, "cannot get request")
 		}
 
-		//fmt.Println(req.GetImage()[:50])
-
 		_, err = e.srv.UploadImage(req.GetImage())
 		if err != nil {
 			return status.Error(codes.Internal, fmt.Errorf("cannot upload the image, %w", err).Error())

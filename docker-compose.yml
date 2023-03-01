@@ -1,1 +1,21 @@
 version: "3"
+
+services:
+  tages:
+    build: .
+    container_name: "tages_v1.0"
+    environment:
+      - GRPCAddr=":9001"
+      - HTTPAddr=":8001"
+    tty: true
+    restart: on-failure
+    ports:
+      - "80:80"
+    networks:
+      - tag
+    volumes:
+      - .:/app
+
+networks:
+  tag:
+    driver: bridge
